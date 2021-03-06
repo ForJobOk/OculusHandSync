@@ -4,12 +4,12 @@ using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
 
-namespace Oq.Function
+namespace Oq
 {
     /// <summary>
     /// 手のメッシュを動的に生成
     /// </summary>
-    public class HandMeshCreateFunction : MonoBehaviour
+    public class HandMeshCreate : MonoBehaviour
     {
         [SerializeField] OVRSkeleton _ovrSkeletonL;
         [SerializeField] OVRSkeleton _ovrSkeletonR;

@@ -5,7 +5,7 @@ using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
 
-namespace Oq.Pun
+namespace Hs.Pun
 {
     /// <summary>
     /// プレーヤーの位置同期
@@ -42,32 +42,30 @@ namespace Oq.Pun
             //部屋に入るまで待つ
             await UniTask.WaitUntil(() => PhotonNetwork.InRoom);
 
-            //他に思いつかないので名前で検索
-            OVRSkeleton ovrSkeletonL = GameObject.Find("OVRHandL").GetComponent<OVRSkeleton>();
-            OVRSkeleton ovrSkeletonR = GameObject.Find("OVRHandR").GetComponent<OVRSkeleton>();
+            //名前で検索
+            var ovrSkeletonL = GameObject.Find("OVRHandL").GetComponent<OVRSkeleton>();
+            var ovrSkeletonR = GameObject.Find("OVRHandR").GetComponent<OVRSkeleton>();
 
             //ボーン情報のデータプロバイダー
-            OVRSkeleton.IOVRSkeletonDataProvider dataProviderL =
-                ovrSkeletonL.GetComponent<OVRSkeleton.IOVRSkeletonDataProvider>();
-            OVRSkeleton.IOVRSkeletonDataProvider dataProviderR =
-                ovrSkeletonR.GetComponent<OVRSkeleton.IOVRSkeletonDataProvider>();
+            var dataProviderL = ovrSkeletonL.GetComponent<OVRSkeleton.IOVRSkeletonDataProvider>();
+            var dataProviderR = ovrSkeletonR.GetComponent<OVRSkeleton.IOVRSkeletonDataProvider>();
 
             //手の認識を待つ
             await UniTask.WaitUntil(() => OVRInput.IsControllerConnected(OVRInput.Controller.Hands));
 
             //あらかじめ決まっているボーンの情報を所持できるクラス
-            OVRPlugin.Skeleton skeleton = new OVRPlugin.Skeleton();
+            var skeleton = new OVRPlugin.Skeleton();
 
             //あらかじめ決まっているボーンの情報を取得し、実際にボーンを生成
             OVRPlugin.GetSkeleton((OVRPlugin.SkeletonType) dataProviderL.GetSkeletonType(), out skeleton);
-            initializeBones(skeleton, _leftHandVisual,out _isInitializedBoneL);
+            InitializeBones(skeleton, _leftHandVisual,out _isInitializedBoneL);
 
             OVRPlugin.GetSkeleton((OVRPlugin.SkeletonType) dataProviderR.GetSkeletonType(), out skeleton);
-            initializeBones(skeleton, _rightHandVisual,out _isInitializedBoneR);
+            InitializeBones(skeleton, _rightHandVisual,out _isInitializedBoneR);
 
             //正しい順序で生成したボーンのリストを作成
-            readyHand(_leftHandVisual, _bonesL, out _isInitializedHandL);
-            readyHand(_rightHandVisual, _bonesR, out _isInitializedHandR);
+            ReadyHand(_leftHandVisual, _bonesL, out _isInitializedHandL);
+            ReadyHand(_rightHandVisual, _bonesR, out _isInitializedHandR);
 
             Quaternion wristFixupRotation = new Quaternion(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -80,46 +78,40 @@ namespace Oq.Pun
                     if (_isInitializedBoneL == false)
                     {
                         OVRPlugin.GetSkeleton((OVRPlugin.SkeletonType) dataProviderL.GetSkeletonType(), out skeleton);
-                        initializeBones(skeleton, _leftHandVisual,out _isInitializedBoneL);
+                        InitializeBones(skeleton, _leftHandVisual,out _isInitializedBoneL);
                     }
 
                     if (_isInitializedBoneR == false)
                     {
                         OVRPlugin.GetSkeleton((OVRPlugin.SkeletonType) dataProviderR.GetSkeletonType(), out skeleton);
-                        initializeBones(skeleton, _leftHandVisual,out _isInitializedBoneR);
+                        InitializeBones(skeleton, _leftHandVisual,out _isInitializedBoneR);
                     }
 
                     if (_isInitializedHandL == false)
                     {
-                        readyHand(_leftHandVisual, _bonesL, out _isInitializedHandL);
+                        ReadyHand(_leftHandVisual, _bonesL, out _isInitializedHandL);
                     }
 
                     if (_isInitializedHandR == false)
                     {
-                        readyHand(_rightHandVisual, _bonesR, out _isInitializedHandR);
+                        ReadyHand(_rightHandVisual, _bonesR, out _isInitializedHandR);
                     }
 
                     if (photonView.IsMine)
                     {
                         //頭
-                        //回転度合の調整
-                        float adjustQuaternionValue = 0.7f;
-                        Transform cameraTransform = Camera.main.transform;
+                        var cameraTransform = Camera.main.transform;
                         
                         _headVisual.transform.localPosition = cameraTransform.localPosition;
-                        Quaternion adjustQuaternion = new Quaternion(
-                            cameraTransform.localRotation.x*adjustQuaternionValue,
-                            cameraTransform.localRotation.y,
-                            cameraTransform.localRotation.z*adjustQuaternionValue,
-                            cameraTransform.localRotation.w);
-                        _headVisual.transform.localRotation = adjustQuaternion;
+                        _headVisual.transform.localRotation = cameraTransform.localRotation;
                         
+                        //ボーンの情報取得
                         _dataL = dataProviderL.GetSkeletonPoseData();
                         _dataR = dataProviderR.GetSkeletonPoseData();
 
                         //認識してないときは自分の手のみ非表示にする
-                        bool shouldRendererL = _dataL.IsDataValid && _dataL.IsDataHighConfidence;
-                        bool shouldRendererR = _dataR.IsDataValid && _dataR.IsDataHighConfidence;
+                        var shouldRendererL = _dataL.IsDataValid && _dataL.IsDataHighConfidence;
+                        var shouldRendererR = _dataR.IsDataValid && _dataR.IsDataHighConfidence;
                         _skinMeshRendererL.enabled = shouldRendererL;
                         _skinMeshRendererR.enabled = shouldRendererR;
 
@@ -129,15 +121,14 @@ namespace Oq.Pun
                             //ルートのローカルポジションを適用
                             _leftHandVisual.transform.localPosition = _dataL.RootPose.Position.FromFlippedZVector3f();
                             _leftHandVisual.transform.localRotation = _dataL.RootPose.Orientation.FromFlippedZQuatf();
-
-                            _leftHandVisual.transform.localScale =
-                                new Vector3(_dataL.RootScale, _dataL.RootScale, _dataL.RootScale);
+                            _leftHandVisual.transform.localScale = new Vector3(_dataL.RootScale, _dataL.RootScale, _dataL.RootScale);
 
                             //ボーンのリストに受け取った値を反映
-                            for (int i = 0; i < _bonesL.Count; ++i)
+                            for (var i = 0; i < _bonesL.Count; ++i)
                             {
                                 _bonesL[i].transform.localRotation = _dataL.BoneRotations[i].FromFlippedXQuatf();
 
+                                //Todo さすがにこれは、、
                                 if (_bonesL[i].name == OVRSkeleton.BoneId.Hand_WristRoot.ToString())
                                 {
                                     _bonesL[i].transform.localRotation *= wristFixupRotation;
@@ -151,15 +142,15 @@ namespace Oq.Pun
                             //ルートのローカルポジションを適用
                             _rightHandVisual.transform.localPosition = _dataR.RootPose.Position.FromFlippedZVector3f();
                             _rightHandVisual.transform.localRotation = _dataR.RootPose.Orientation.FromFlippedZQuatf();
-                            _rightHandVisual.transform.localScale =
-                                new Vector3(_dataR.RootScale, _dataR.RootScale, _dataR.RootScale);
+                            _rightHandVisual.transform.localScale = new Vector3(_dataR.RootScale, _dataR.RootScale, _dataR.RootScale);
 
 
                             //ボーンのリストに受け取った値を反映
-                            for (int i = 0; i < _bonesR.Count; ++i)
+                            for (var i = 0; i < _bonesR.Count; ++i)
                             {
                                 _bonesR[i].transform.localRotation = _dataR.BoneRotations[i].FromFlippedXQuatf();
 
+                                //Todo さすがにこれは、、
                                 if (_bonesR[i].name == OVRSkeleton.BoneId.Hand_WristRoot.ToString())
                                 {
                                     _bonesR[i].transform.localRotation *= wristFixupRotation;
@@ -177,17 +168,17 @@ namespace Oq.Pun
         /// </summary>
         /// <param name="hand">子にボーンを持っている手</param>
         /// <param name="bones">空のリスト</param>
-        private void readyHand(GameObject hand, List<Transform> bones, out　bool isInitialize)
+        private void ReadyHand(GameObject hand, List<Transform> bones, out　bool isInitialize)
         {
             //'Bones'と名の付くオブジェクトからリストを作成する
             foreach (Transform child in hand.transform)
             {
                 _listOfChildren = new List<Transform>();
-                getChildRecursive(child.transform);
+                GetChildRecursive(child.transform);
 
                 //まずは指先以外のリストを作成
-                List<Transform> fingerTips = new List<Transform>();
-                foreach (Transform bone in _listOfChildren)
+                var fingerTips = new List<Transform>();
+                foreach (var bone in _listOfChildren)
                 {
                     if (bone.name.Contains("Tip"))
                     {
@@ -200,19 +191,16 @@ namespace Oq.Pun
                 }
 
                 //指先もリストに追加
-                foreach (Transform bone in fingerTips)
-                {
-                    bones.Add(bone);
-                }
+                bones.AddRange(fingerTips);
             }
 
             //動的に生成されるメッシュをSkinnedMeshRendererに反映
-            SkinnedMeshRenderer skinMeshRenderer = hand.GetComponent<SkinnedMeshRenderer>();
-            OVRMesh ovrMesh = hand.GetComponent<OVRMesh>();
+            var skinMeshRenderer = hand.GetComponent<SkinnedMeshRenderer>();
+            var ovrMesh = hand.GetComponent<OVRMesh>();
 
-            Matrix4x4[] bindPoses = new Matrix4x4[bones.Count];
-            Matrix4x4 localToWorldMatrix = transform.localToWorldMatrix;
-            for (int i = 0; i < bones.Count; ++i)
+            var bindPoses = new Matrix4x4[bones.Count];
+            var localToWorldMatrix = transform.localToWorldMatrix;
+            for (var i = 0; i < bones.Count; ++i)
             {
                 bindPoses[i] = bones[i].worldToLocalMatrix * localToWorldMatrix;
             }
@@ -229,10 +217,9 @@ namespace Oq.Pun
         /// 子のオブジェクトのTransformを再帰的に全て取得
         /// </summary>
         /// <param name="obj">子階層が欲しいオブジェクトのRoot</param>
-        private void getChildRecursive(Transform obj)
+        private void GetChildRecursive(Transform obj)
         {
-            if (null == obj)
-                return;
+            if (null == obj) return;
 
             foreach (Transform child in obj.transform)
             {
@@ -244,7 +231,7 @@ namespace Oq.Pun
                     _listOfChildren.Add(child);
                 }
 
-                getChildRecursive(child);
+                GetChildRecursive(child);
             }
         }
 
@@ -253,33 +240,33 @@ namespace Oq.Pun
         /// </summary>
         /// <param name="skeleton">あらかじめ用意されたボーンの情報</param>
         /// <param name="hand">左右どちらかの手</param>
-        private void initializeBones(OVRPlugin.Skeleton skeleton, GameObject hand, out bool isInitialize)
+        private void InitializeBones(OVRPlugin.Skeleton skeleton, GameObject hand, out bool isInitialize)
         {
             _bones = new List<OVRBone>(new OVRBone[skeleton.NumBones]);
 
-            GameObject _bonesGO = new GameObject("Bones");
-            _bonesGO.transform.SetParent(hand.transform, false);
-            _bonesGO.transform.localPosition = Vector3.zero;
-            _bonesGO.transform.localRotation = Quaternion.identity;
+            var bonesGO = new GameObject("Bones");
+            bonesGO.transform.SetParent(hand.transform, false);
+            bonesGO.transform.localPosition = Vector3.zero;
+            bonesGO.transform.localRotation = Quaternion.identity;
 
-            for (int i = 0; i < skeleton.NumBones; ++i)
+            for (var i = 0; i < skeleton.NumBones; ++i)
             {
-                OVRSkeleton.BoneId id = (OVRSkeleton.BoneId) skeleton.Bones[i].Id;
-                short parentIdx = skeleton.Bones[i].ParentBoneIndex;
-                Vector3 pos = skeleton.Bones[i].Pose.Position.FromFlippedXVector3f();
-                Quaternion rot = skeleton.Bones[i].Pose.Orientation.FromFlippedXQuatf();
+                var id = (OVRSkeleton.BoneId) skeleton.Bones[i].Id;
+                var parentIdx = skeleton.Bones[i].ParentBoneIndex;
+                var pos = skeleton.Bones[i].Pose.Position.FromFlippedXVector3f();
+                var rot = skeleton.Bones[i].Pose.Orientation.FromFlippedXQuatf();
 
-                GameObject boneGO = new GameObject(id.ToString());
+                var boneGO = new GameObject(id.ToString());
                 boneGO.transform.localPosition = pos;
                 boneGO.transform.localRotation = rot;
                 _bones[i] = new OVRBone(id, parentIdx, boneGO.transform);
             }
 
-            for (int i = 0; i < skeleton.NumBones; ++i)
+            for (var i = 0; i < skeleton.NumBones; ++i)
             {
                 if (((OVRPlugin.BoneId) skeleton.Bones[i].ParentBoneIndex) == OVRPlugin.BoneId.Invalid)
                 {
-                    _bones[i].Transform.SetParent(_bonesGO.transform, false);
+                    _bones[i].Transform.SetParent(bonesGO.transform, false);
                 }
                 else
                 {
@@ -298,8 +285,7 @@ namespace Oq.Pun
         void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
             //何かの初期化が終わってなかったらリターン
-            if (_isInitializedBoneL == false || _isInitializedBoneR == false || _isInitializedHandL == false ||
-                _isInitializedHandR == false)
+            if (_isInitializedBoneL == false || _isInitializedBoneR == false || _isInitializedHandL == false || _isInitializedHandR == false)
             {
                 return;
             }
@@ -315,9 +301,9 @@ namespace Oq.Pun
                 stream.SendNext(_leftHandVisual.transform.localRotation);
 
                 //ボーンのリストに受け取った値を反映
-                for (var i = 0; i < _bonesL.Count; ++i)
+                foreach (var t in _bonesL)
                 {
-                    stream.SendNext(_bonesL[i].transform.localRotation);
+                    stream.SendNext(t.transform.localRotation);
                 }
 
                 //右手
@@ -325,9 +311,9 @@ namespace Oq.Pun
                 stream.SendNext(_rightHandVisual.transform.localRotation);
 
                 //ボーンのリストに受け取った値を反映
-                for (var i = 0; i < _bonesR.Count; ++i)
+                foreach (var t in _bonesR)
                 {
-                    stream.SendNext(_bonesR[i].transform.localRotation);
+                    stream.SendNext(t.transform.localRotation);
                 }
             }
             else
@@ -341,9 +327,9 @@ namespace Oq.Pun
                 _leftHandVisual.transform.localRotation = (Quaternion) stream.ReceiveNext();
 
                 //ボーンのリストに受け取った値を反映
-                for (var i = 0; i < _bonesL.Count; ++i)
+                foreach (var t in _bonesL)
                 {
-                    _bonesL[i].transform.localRotation = (Quaternion) stream.ReceiveNext();
+                    t.transform.localRotation = (Quaternion) stream.ReceiveNext();
                 }
 
                 //右手
@@ -352,9 +338,9 @@ namespace Oq.Pun
                 _rightHandVisual.transform.localRotation = (Quaternion) stream.ReceiveNext();
 
                 //ボーンのリストに受け取った値を反映
-                for (var i = 0; i < _bonesR.Count; ++i)
+                foreach (var t in _bonesR)
                 {
-                    _bonesR[i].transform.localRotation = (Quaternion) stream.ReceiveNext();
+                    t.transform.localRotation = (Quaternion) stream.ReceiveNext();
                 }
             }
         }

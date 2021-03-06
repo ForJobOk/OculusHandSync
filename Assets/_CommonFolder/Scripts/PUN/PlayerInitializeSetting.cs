@@ -6,7 +6,7 @@ using Photon.Realtime;
 using UnityEngine;
 using Ono.Utility;
 
-namespace Oq.Pun
+namespace Hs.Pun
 {
     /// <summary>
     /// プレーヤー生成時に行う初期設定処理

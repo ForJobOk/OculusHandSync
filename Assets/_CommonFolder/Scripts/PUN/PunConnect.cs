@@ -2,7 +2,7 @@
 using Photon.Realtime;
 using UnityEngine;
 
-namespace Oq.Pun
+namespace Hs.Pun
 {
     /// <summary>
     /// 接続に関する

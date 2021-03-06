@@ -2,7 +2,7 @@
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-namespace Oq.Pun
+namespace Hs.Pun
 {
     /// <summary>
     /// カスタムプロパティの拡張クラス
