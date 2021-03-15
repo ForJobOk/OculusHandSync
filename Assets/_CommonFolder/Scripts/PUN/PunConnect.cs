@@ -1,4 +1,5 @@
-﻿using Photon.Pun;
+﻿using Hs.Data;
+using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
@@ -10,13 +11,11 @@ namespace Hs.Pun
     public class PunConnect : MonoBehaviourPunCallbacks
     {
         [SerializeField] private GameObject _avatar;
-       
-        private const int _PLAYER_UPPER_LIMIT = 2;
         
         //ルームオプションのプロパティー
         private readonly RoomOptions _roomOptions = new RoomOptions()
         {
-            MaxPlayers = _PLAYER_UPPER_LIMIT, //人数制限
+            MaxPlayers = (byte)ConstantData.PlayerUpperLimit, //人数制限
             IsOpen = true, //部屋に参加できるか
             IsVisible = true, //この部屋がロビーにリストされるか
         };

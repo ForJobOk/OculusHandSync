@@ -42,9 +42,9 @@ namespace Hs.Pun
             //部屋に入るまで待つ
             await UniTask.WaitUntil(() => PhotonNetwork.InRoom);
 
-            //名前で検索
-            var ovrSkeletonL = GameObject.Find("OVRHandL").GetComponent<OVRSkeleton>();
-            var ovrSkeletonR = GameObject.Find("OVRHandR").GetComponent<OVRSkeleton>();
+            //タグで検索
+            var ovrSkeletonL = GameObject.FindGameObjectWithTag("HandL").GetComponent<OVRSkeleton>();
+            var ovrSkeletonR = GameObject.FindGameObjectWithTag("HandR").GetComponent<OVRSkeleton>();
 
             //ボーン情報のデータプロバイダー
             var dataProviderL = ovrSkeletonL.GetComponent<OVRSkeleton.IOVRSkeletonDataProvider>();
@@ -127,8 +127,7 @@ namespace Hs.Pun
                             for (var i = 0; i < _bonesL.Count; ++i)
                             {
                                 _bonesL[i].transform.localRotation = _dataL.BoneRotations[i].FromFlippedXQuatf();
-
-                                //Todo さすがにこれは、、
+                                
                                 if (_bonesL[i].name == OVRSkeleton.BoneId.Hand_WristRoot.ToString())
                                 {
                                     _bonesL[i].transform.localRotation *= wristFixupRotation;
@@ -149,8 +148,7 @@ namespace Hs.Pun
                             for (var i = 0; i < _bonesR.Count; ++i)
                             {
                                 _bonesR[i].transform.localRotation = _dataR.BoneRotations[i].FromFlippedXQuatf();
-
-                                //Todo さすがにこれは、、
+                                
                                 if (_bonesR[i].name == OVRSkeleton.BoneId.Hand_WristRoot.ToString())
                                 {
                                     _bonesR[i].transform.localRotation *= wristFixupRotation;
@@ -168,6 +166,7 @@ namespace Hs.Pun
         /// </summary>
         /// <param name="hand">子にボーンを持っている手</param>
         /// <param name="bones">空のリスト</param>
+        /// <param name="isInitialize">初期化完了フラグ</param>
         private void ReadyHand(GameObject hand, List<Transform> bones, out　bool isInitialize)
         {
             //'Bones'と名の付くオブジェクトからリストを作成する
@@ -240,6 +239,7 @@ namespace Hs.Pun
         /// </summary>
         /// <param name="skeleton">あらかじめ用意されたボーンの情報</param>
         /// <param name="hand">左右どちらかの手</param>
+        /// <param name="isInitialize">初期化完了フラグ</param>
         private void InitializeBones(OVRPlugin.Skeleton skeleton, GameObject hand, out bool isInitialize)
         {
             _bones = new List<OVRBone>(new OVRBone[skeleton.NumBones]);

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using ExitGames.Client.Photon;
+using Hs.Data;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -18,13 +19,8 @@ namespace Hs.Pun
         [SerializeField] private MeshRenderer _headObjectMeshRenderer;
         [SerializeField] private Material[] _playerHandMaterials;
         
-        private List<GameObject> _playerSetPositionObjectList = new List<GameObject>();
-
-        private const int _PLAYER_UPPER_LIMIT = 2;
-        private const float _RADIUS = 0.5f;
-
+        private readonly List<GameObject> _playerSetPositionObjectList = new List<GameObject>();
         private bool _isUpdateCustomProperty;
-        
         private GameObject _cameraRig;
         private Transform _localPlayerTransform;
 
@@ -98,7 +94,7 @@ namespace Hs.Pun
         private void generatePlayerPositionOnCircle()
         {
             //部屋の上限分の座標リストを作成
-            for (int i = 0; i < _PLAYER_UPPER_LIMIT; i++)
+            for (int i = 0; i < ConstantData.PlayerUpperLimit; i++)
             {
                 _playerSetPositionObjectList.Add(new GameObject());
             }
@@ -111,8 +107,8 @@ namespace Hs.Pun
                 Vector3 tmpPosition = _playerSetPositionObjectList[i].transform.position;
 
                 float angle = (90 - angleDiff * i) * Mathf.Deg2Rad;
-                tmpPosition.x += _RADIUS * Mathf.Cos(angle);
-                tmpPosition.z += _RADIUS * Mathf.Sin(angle);
+                tmpPosition.x += ConstantData.Radius * Mathf.Cos(angle);
+                tmpPosition.z += ConstantData.Radius * Mathf.Sin(angle);
 
                 _playerSetPositionObjectList[i].transform.position = tmpPosition;
 
@@ -134,7 +130,7 @@ namespace Hs.Pun
                 //制限人数までの数字のリストを作成
                 //例) 制限人数 = 4 の場合、{0,1,2,3}
                 int count = 0;
-                for (int i = 0; i < _PLAYER_UPPER_LIMIT; i++)
+                for (int i = 0; i < ConstantData.PlayerUpperLimit; i++)
                 {
                     playerSetableCountList.Add(count);
                     count++;
