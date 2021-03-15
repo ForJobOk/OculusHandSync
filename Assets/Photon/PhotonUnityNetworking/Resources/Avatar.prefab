@@ -445,9 +445,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f7bc41516a36f14c98de00cee14fb8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _handRistObjectSkinnedMeshRendererL: {fileID: 6997014766447261113}
-  _handRistObjectSkinnedMeshRendererR: {fileID: 7018325053128171434}
-  _headObjectMeshRenderer: {fileID: 173062065523598845}
+  _playerRenderers:
+  - {fileID: 173062065523598845}
+  - {fileID: 6997014766447261113}
+  - {fileID: 7018325053128171434}
   _playerHandMaterials:
   - {fileID: 2100000, guid: 95cd8eb28eb9cbf459c01c50220515d8, type: 2}
   - {fileID: 2100000, guid: e56fb8fd39774bb46b5d473e419dc76d, type: 2}

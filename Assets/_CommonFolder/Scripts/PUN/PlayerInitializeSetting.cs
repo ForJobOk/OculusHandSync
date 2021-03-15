@@ -14,9 +14,7 @@ namespace Hs.Pun
     /// </summary>
     public class PlayerInitializeSetting : MonoBehaviourPunCallbacks
     {
-        [SerializeField] private SkinnedMeshRenderer _handRistObjectSkinnedMeshRendererL;
-        [SerializeField] private SkinnedMeshRenderer _handRistObjectSkinnedMeshRendererR;
-        [SerializeField] private MeshRenderer _headObjectMeshRenderer;
+        [SerializeField] private Renderer[] _playerRenderers;
         [SerializeField] private Material[] _playerHandMaterials;
         
         private readonly List<GameObject> _playerSetPositionObjectList = new List<GameObject>();
@@ -28,17 +26,16 @@ namespace Hs.Pun
         {
             _cameraRig = GameObject.FindGameObjectWithTag("Player");
             
-            OVRTracker ovrTracker = new OVRTracker();
+            var ovrTracker = new OVRTracker();
             
             //HMDがトラッキングされるまで待つ
             await UniTask.WaitUntil(() =>ovrTracker.isEnabled);
-            Debug.Log("Tracked");
-            
+           
             //プレイヤーの生成位置を円状に配置
-            generatePlayerPositionOnCircle();
+            GeneratePlayerPositionList();
             
             //プレーヤーのカスタムプロパティ更新
-            setMyCustomProperties();
+            SetMyCustomProperties();
         }
 
         /// <summary>
@@ -53,60 +50,48 @@ namespace Hs.Pun
             //自分のクライアントの設定
             if (photonView.IsMine)
             {
-                Debug.Log("自クライアントの初期位置設定");
-                this.gameObject.transform.rotation = PhotonNetwork.LocalPlayer.GetPlayerInitRotation();
-                this.gameObject.transform.position = PhotonNetwork.LocalPlayer.GetPlayerInitPosition();
+                transform.rotation = PhotonNetwork.LocalPlayer.GetPlayerInitRotation();
+                transform.position = PhotonNetwork.LocalPlayer.GetPlayerInitPosition();
                 
                 //同期オブジェクトのマテリアル変更
-                //手
-                _handRistObjectSkinnedMeshRendererL.sharedMaterial = 
-                    _playerHandMaterials[PhotonNetwork.LocalPlayer.GetPlayerNum()];
-                _handRistObjectSkinnedMeshRendererR.sharedMaterial = 
-                    _playerHandMaterials[PhotonNetwork.LocalPlayer.GetPlayerNum()];
-                
-                //頭
-                _headObjectMeshRenderer.sharedMaterial = 
-                    _playerHandMaterials[PhotonNetwork.LocalPlayer.GetPlayerNum()];
+                foreach (var r in _playerRenderers)
+                {
+                    r.sharedMaterial = _playerHandMaterials[PhotonNetwork.LocalPlayer.GetPlayerNum()];
+                }
             }
             //他のクライアントの設定
             else
             {
-                Debug.Log("他クライアントの初期位置設定");
-                this.gameObject.transform.rotation = photonView.Owner.GetPlayerInitRotation();
-                this.gameObject.transform.position = photonView.Owner.GetPlayerInitPosition();
+                transform.rotation = photonView.Owner.GetPlayerInitRotation();
+                transform.position = photonView.Owner.GetPlayerInitPosition();
                 
                 //同期オブジェクトのマテリアル変更
-                //手
-                _handRistObjectSkinnedMeshRendererL.sharedMaterial = 
-                    _playerHandMaterials[photonView.Owner.GetPlayerNum()];
-                _handRistObjectSkinnedMeshRendererR.sharedMaterial = 
-                    _playerHandMaterials[photonView.Owner.GetPlayerNum()];
-                
-                //頭
-                _headObjectMeshRenderer.sharedMaterial = 
-                    _playerHandMaterials[photonView.Owner.GetPlayerNum()];
+                foreach (var r in _playerRenderers)
+                {
+                    r.sharedMaterial = _playerHandMaterials[photonView.Owner.GetPlayerNum()];
+                }
             }
         }
 
         /// <summary>
         /// プレーヤーの生成位置となるオブジェクトを円状に作成
         /// </summary>
-        private void generatePlayerPositionOnCircle()
+        private void GeneratePlayerPositionList()
         {
             //部屋の上限分の座標リストを作成
-            for (int i = 0; i < ConstantData.PlayerUpperLimit; i++)
+            for (var i = 0; i < ConstantData.PlayerUpperLimit; i++)
             {
                 _playerSetPositionObjectList.Add(new GameObject());
             }
 
             //オブジェクト間の角度差
-            float angleDiff = 360f / _playerSetPositionObjectList.Count;
+            var angleDiff = 360f / _playerSetPositionObjectList.Count;
 
-            for (int i = 0; i < _playerSetPositionObjectList.Count; i++)
+            for (var i = 0; i < _playerSetPositionObjectList.Count; i++)
             {
                 Vector3 tmpPosition = _playerSetPositionObjectList[i].transform.position;
 
-                float angle = (90 - angleDiff * i) * Mathf.Deg2Rad;
+                var angle = (90 - angleDiff * i) * Mathf.Deg2Rad;
                 tmpPosition.x += ConstantData.Radius * Mathf.Cos(angle);
                 tmpPosition.z += ConstantData.Radius * Mathf.Sin(angle);
 
@@ -120,37 +105,36 @@ namespace Hs.Pun
         /// <summary>
         /// プレイヤーに番号を与える
         /// </summary>
-        private void setMyCustomProperties()
+        private void SetMyCustomProperties()
         {
             //自分のクライアントの同期オブジェクトにのみ
             if (photonView.IsMine)
             {
-                List<int> playerSetableCountList = new List<int>();
+                var playerSetableCountList = new List<int>();
             
                 //制限人数までの数字のリストを作成
                 //例) 制限人数 = 4 の場合、{0,1,2,3}
-                int count = 0;
-                for (int i = 0; i < ConstantData.PlayerUpperLimit; i++)
+                var count = 0;
+                for (var i = 0; i < ConstantData.PlayerUpperLimit; i++)
                 {
                     playerSetableCountList.Add(count);
                     count++;
                 }
                 
                 //他の全プレイヤー取得
-                Player[] otherPlayers = PhotonNetwork.PlayerListOthers;
+                var otherPlayers = PhotonNetwork.PlayerListOthers;
 
                 //他のプレイヤーがいなければカスタムプロパティの値を"1"に設定
                 if (otherPlayers.Length <= 0)
                 {
                     //ローカルのプレイヤーのカスタムプロパティを設定
-                    int playerAssignNum = otherPlayers.Length;
+                    var playerAssignNum = otherPlayers.Length;
                     PhotonNetwork.LocalPlayer.UpdatePlayerNum(playerAssignNum);
 
                     Debug.Log("自プレーヤーの値:" + PhotonNetwork.LocalPlayer.GetPlayerNum());
                     
                     //座標、回転座標をカスタムプロパティに保存
-                    _localPlayerTransform =
-                        _playerSetPositionObjectList[playerSetableCountList[0]].transform;
+                    _localPlayerTransform = _playerSetPositionObjectList[playerSetableCountList[0]].transform;
                     PlayerPositionUtility.CopyTargetTransform(ref _cameraRig, _localPlayerTransform);
                     PhotonNetwork.LocalPlayer.UpdatePlayerInitPosition(_cameraRig.transform.position);
                     PhotonNetwork.LocalPlayer.UpdatePlayerInitRotation(_cameraRig.transform.rotation);
@@ -161,10 +145,10 @@ namespace Hs.Pun
                 Debug.Log("他プレーヤーの人数:" + otherPlayers.Length);
 
                 //他のプレイヤーのカスタムプロパティー取得してリスト作成
-                List<int> playerAssignNums = new List<int>();
-                for (int i = 0; i < otherPlayers.Length; i++)
+                var playerAssignNums = new List<int>();
+                foreach (var t in otherPlayers)
                 {
-                    playerAssignNums.Add(otherPlayers[i].GetPlayerNum());
+                    playerAssignNums.Add(t.GetPlayerNum());
                 }
 
                 //リスト同士を比較し、未使用の数字のリストを作成
@@ -176,8 +160,7 @@ namespace Hs.Pun
                 PhotonNetwork.LocalPlayer.UpdatePlayerNum(playerSetableCountList[0]);
                 
                 //座標、回転座標をカスタムプロパティに保存
-                _localPlayerTransform =
-                    _playerSetPositionObjectList[playerSetableCountList[0]].transform;
+                _localPlayerTransform = _playerSetPositionObjectList[playerSetableCountList[0]].transform;
                 PlayerPositionUtility.CopyTargetTransform(ref _cameraRig, _localPlayerTransform);
                 PhotonNetwork.LocalPlayer.UpdatePlayerInitPosition(_cameraRig.transform.position);
                 PhotonNetwork.LocalPlayer.UpdatePlayerInitRotation(_cameraRig.transform.rotation);
