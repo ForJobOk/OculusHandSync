@@ -101,7 +101,7 @@ namespace Hs.Pun
                     {
                         //頭
                         var cameraTransform = Camera.main.transform;
-                        
+
                         _headVisual.transform.localPosition = cameraTransform.localPosition;
                         _headVisual.transform.localRotation = cameraTransform.localRotation;
                         
