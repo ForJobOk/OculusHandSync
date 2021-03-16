@@ -19,6 +19,9 @@
 # Plugins
 [Aa]ssets/Plugins/*
 
+# PUN
+[Aa]ssets/Photon/*
+
 # Rider
 .idea/
 
