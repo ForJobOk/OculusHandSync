@@ -1,6 +1,5 @@
 ## HandSync
-
-OculusQuestを使用したハンドトラッキングの同期サンプルです。 
+OculusQuestを使用したハンドトラッキングの同期サンプルです。  
 Todo ここにGIF
 
 ## バージョン
