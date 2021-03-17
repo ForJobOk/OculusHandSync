@@ -1,6 +1,6 @@
 ## HandSync
-OculusQuestを使用したハンドトラッキングの同期サンプルです。  
-Todo ここにGIF
+OculusQuestを使用したハンドトラッキングの同期サンプルです。 
+![じゃんけんVR](https://user-images.githubusercontent.com/41860455/111462818-36bf8d00-8762-11eb-8079-8ffa008c2dea.gif)
 
 ## バージョン
 Unity 2019.4.8f1  
