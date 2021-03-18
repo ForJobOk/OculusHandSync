@@ -297,8 +297,8 @@ namespace Hs.Pun
                 stream.SendNext(_headVisual.transform.rotation);
                 
                 //左手
-                stream.SendNext(_leftHandVisual.transform.localPosition);
-                stream.SendNext(_leftHandVisual.transform.localRotation);
+                stream.SendNext(_leftHandVisual.transform.position);
+                stream.SendNext(_leftHandVisual.transform.rotation);
 
                 //ボーンのリストに受け取った値を反映
                 foreach (var t in _bonesL)
@@ -307,8 +307,8 @@ namespace Hs.Pun
                 }
 
                 //右手
-                stream.SendNext(_rightHandVisual.transform.localPosition);
-                stream.SendNext(_rightHandVisual.transform.localRotation);
+                stream.SendNext(_rightHandVisual.transform.position);
+                stream.SendNext(_rightHandVisual.transform.rotation);
 
                 //ボーンのリストに受け取った値を反映
                 foreach (var t in _bonesR)
@@ -323,8 +323,8 @@ namespace Hs.Pun
                 _headVisual.transform.rotation = (Quaternion) stream.ReceiveNext();
                 
                 //左手
-                _leftHandVisual.transform.localPosition = (Vector3) stream.ReceiveNext();
-                _leftHandVisual.transform.localRotation = (Quaternion) stream.ReceiveNext();
+                _leftHandVisual.transform.position = (Vector3) stream.ReceiveNext();
+                _leftHandVisual.transform.rotation = (Quaternion) stream.ReceiveNext();
 
                 //ボーンのリストに受け取った値を反映
                 foreach (var t in _bonesL)
@@ -333,9 +333,8 @@ namespace Hs.Pun
                 }
 
                 //右手
-                //ルートのローカルポジションを適用
-                _rightHandVisual.transform.localPosition = (Vector3) stream.ReceiveNext();
-                _rightHandVisual.transform.localRotation = (Quaternion) stream.ReceiveNext();
+                _rightHandVisual.transform.position = (Vector3) stream.ReceiveNext();
+                _rightHandVisual.transform.rotation = (Quaternion) stream.ReceiveNext();
 
                 //ボーンのリストに受け取った値を反映
                 foreach (var t in _bonesR)

@@ -25,7 +25,7 @@ namespace Ono.Utility
             var cameraRigStartPos = rig.position;
             var eyeCameraPos = cameraTransform.position;
     
-            rig.position = target.transform.position;
+            rig.position = target.position;
             rig.position += new Vector3(cameraRigStartPos.x - eyeCameraPos.x, 0, cameraRigStartPos.z - eyeCameraPos.z);
         }
     }

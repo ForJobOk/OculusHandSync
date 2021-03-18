@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using ExitGames.Client.Photon;
 using Hs.Data;
@@ -16,18 +18,18 @@ namespace Hs.Pun
     {
         [SerializeField] private Renderer[] _playerRenderers;
         [SerializeField] private Material[] _playerHandMaterials;
-        
-        private readonly List<GameObject> _playerSetPositionObjectList = new List<GameObject>();
 
-        private async void Start()
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        
+        private void Start()
         {
-            var ovrTracker = new OVRTracker();
-            
-            //HMDがトラッキングされるまで待つ
-            await UniTask.WaitUntil(() =>ovrTracker.isEnabled);
-            
             //プレーヤーのカスタムプロパティ更新
             SetMyCustomProperties();
+        }
+
+        private void OnDestroy()
+        {
+            _cts.Dispose();
         }
 
         /// <summary>
@@ -43,7 +45,7 @@ namespace Hs.Pun
             if (photonView.IsMine)
             {
                 //ローカルプレイヤーの生成位置調整
-                SetLocalPlayerPosition();
+                SetLocalPlayerPositionAsync(_cts.Token).Forget();
                 
                 //同期オブジェクトのマテリアル変更
                 foreach (var r in _playerRenderers)
@@ -65,39 +67,50 @@ namespace Hs.Pun
         /// <summary>
         /// ローカルプレイヤーの生成位置調整
         /// </summary>
-        private void SetLocalPlayerPosition()
+        private async UniTask SetLocalPlayerPositionAsync(CancellationToken ct)
         {
             //＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             // プレーヤーの生成位置となるオブジェクトを円状に作成
             //＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+            var playerPositionObjectList = new List<GameObject>();
             
             //部屋の上限分の座標リストを作成
             for (var i = 0; i < ConstantData.PlayerUpperLimit; i++)
             {
-                _playerSetPositionObjectList.Add(new GameObject($"PlayerPos{i}"));
+                playerPositionObjectList.Add(new GameObject($"PlayerPos{i}"));
             }
 
             //オブジェクト間の角度差
-            var angleDiff = 360f / _playerSetPositionObjectList.Count;
+            var angleDiff = 360f / playerPositionObjectList.Count;
 
-            for (var i = 0; i < _playerSetPositionObjectList.Count; i++)
+            for (var i = 0; i < playerPositionObjectList.Count; i++)
             {
-                Vector3 tmpPosition = _playerSetPositionObjectList[i].transform.position;
+                var tmpPosition = playerPositionObjectList[i].transform.position;
 
                 var angle = (90 - angleDiff * i) * Mathf.Deg2Rad;
                 tmpPosition.x += ConstantData.Radius * Mathf.Cos(angle);
                 tmpPosition.z += ConstantData.Radius * Mathf.Sin(angle);
 
-                _playerSetPositionObjectList[i].transform.position = tmpPosition;
+                playerPositionObjectList[i].transform.position = tmpPosition;
 
                 //中央を向かせる
-                _playerSetPositionObjectList[i].transform.LookAt(Vector3.zero);
+                playerPositionObjectList[i].transform.LookAt(Vector3.zero);
             }
+            
+            
+            var ovrTracker = new OVRTracker();
+            
+            //HMDがトラッキングされるまで待つ
+            await UniTask.WaitUntil(() =>ovrTracker.isEnabled, cancellationToken: ct);
             
             //CameraRigの座標、回転座標を調整
             var cameraRigTransform = GameObject.FindGameObjectWithTag("Player").transform;
-            var targetTransform = _playerSetPositionObjectList[PhotonNetwork.LocalPlayer.GetPlayerNum()].transform;
+            var targetTransform = playerPositionObjectList[PhotonNetwork.LocalPlayer.GetPlayerNum()].transform;
             PlayerPositionUtility.CopyTargetTransform(cameraRigTransform, targetTransform);
+            //アバターに適用
+            transform.rotation = cameraRigTransform.rotation;
+            transform.position = cameraRigTransform.position;
         }
 
         /// <summary>
