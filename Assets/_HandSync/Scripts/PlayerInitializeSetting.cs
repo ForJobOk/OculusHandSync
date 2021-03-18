@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using ExitGames.Client.Photon;
@@ -12,7 +11,7 @@ using Ono.Utility;
 namespace Hs.Pun
 {
     /// <summary>
-    /// プレーヤー生成時に行う初期設定処理
+    /// プレーヤー生成時に行う処理
     /// </summary>
     public class PlayerInitializeSetting : MonoBehaviourPunCallbacks
     {
@@ -63,7 +62,7 @@ namespace Hs.Pun
                 }
             }
         }
-
+        
         /// <summary>
         /// ローカルプレイヤーの生成位置調整
         /// </summary>
@@ -98,10 +97,8 @@ namespace Hs.Pun
                 playerPositionObjectList[i].transform.LookAt(Vector3.zero);
             }
             
-            
-            var ovrTracker = new OVRTracker();
-            
             //HMDがトラッキングされるまで待つ
+            var ovrTracker = new OVRTracker();
             await UniTask.WaitUntil(() =>ovrTracker.isEnabled, cancellationToken: ct);
             
             //CameraRigの座標、回転座標を調整
