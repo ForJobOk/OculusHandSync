@@ -1,8 +1,9 @@
-﻿namespace Ono.Utility
+﻿using UnityEngine;
+
+namespace Ono.Utility
 {
-    using UnityEngine;
     /// <summary>
-    /// Recenter your camera when you start VR. Attach to CameraRig.
+    /// Rigを使ったプレイヤーの移動処理
     /// </summary>
     public static class PlayerPositionUtility
     {
@@ -10,21 +11,22 @@
         /// 任意のオブジェクトの回転と位置を模倣
         /// VRのCameraRigオブジェクトに対して有効
         /// </summary>
-        /// <param name="obj">調整したいオブジェクト</param>
+        /// <param name="rig">CameraRig</param>
         /// <param name="target">模倣したいオブジェクトのTransform</param>
-        public static void  CopyTargetTransform(ref GameObject obj, Transform target)
+        public static void  CopyTargetTransform(Transform rig, Transform target)
         {
-            Vector3 cameraRig_Angles = obj.transform.eulerAngles;
-            Vector3 eyeCamera_Angles = Camera.main.transform.eulerAngles;
+            var cameraTransform = Camera.main?.transform;
+            var cameraRigAngles = rig.eulerAngles;
+            var eyeCameraAngles = cameraTransform.eulerAngles;
     
-            obj.transform.eulerAngles = target.eulerAngles;
-            obj.transform.eulerAngles += new Vector3(0, cameraRig_Angles.y - eyeCamera_Angles.y, 0);
+            rig.eulerAngles = target.eulerAngles;
+            rig.eulerAngles += new Vector3(0, cameraRigAngles.y - eyeCameraAngles.y, 0);
     
-            Vector3 cameraRig_StartPos = obj.transform.position;
-            Vector3 eyeCamera_Pos = Camera.main.transform.position;
+            var cameraRigStartPos = rig.position;
+            var eyeCameraPos = cameraTransform.position;
     
-            obj.transform.position = target.transform.position;
-            obj.transform.position += new Vector3(cameraRig_StartPos.x - eyeCamera_Pos.x, 0, cameraRig_StartPos.z - eyeCamera_Pos.z);
+            rig.position = target.transform.position;
+            rig.position += new Vector3(cameraRigStartPos.x - eyeCameraPos.x, 0, cameraRigStartPos.z - eyeCameraPos.z);
         }
     }
 }

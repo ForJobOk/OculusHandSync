@@ -18,21 +18,13 @@ namespace Hs.Pun
         [SerializeField] private Material[] _playerHandMaterials;
         
         private readonly List<GameObject> _playerSetPositionObjectList = new List<GameObject>();
-        private bool _isUpdateCustomProperty;
-        private GameObject _cameraRig;
-        private Transform _localPlayerTransform;
 
         private async void Start()
         {
-            _cameraRig = GameObject.FindGameObjectWithTag("Player");
-            
             var ovrTracker = new OVRTracker();
             
             //HMDがトラッキングされるまで待つ
             await UniTask.WaitUntil(() =>ovrTracker.isEnabled);
-           
-            //プレイヤーの生成位置を円状に配置
-            GeneratePlayerPositionList();
             
             //プレーヤーのカスタムプロパティ更新
             SetMyCustomProperties();
@@ -50,8 +42,8 @@ namespace Hs.Pun
             //自分のクライアントの設定
             if (photonView.IsMine)
             {
-                transform.rotation = PhotonNetwork.LocalPlayer.GetPlayerInitRotation();
-                transform.position = PhotonNetwork.LocalPlayer.GetPlayerInitPosition();
+                //ローカルプレイヤーの生成位置調整
+                SetLocalPlayerPosition();
                 
                 //同期オブジェクトのマテリアル変更
                 foreach (var r in _playerRenderers)
@@ -62,9 +54,6 @@ namespace Hs.Pun
             //他のクライアントの設定
             else
             {
-                transform.rotation = photonView.Owner.GetPlayerInitRotation();
-                transform.position = photonView.Owner.GetPlayerInitPosition();
-                
                 //同期オブジェクトのマテリアル変更
                 foreach (var r in _playerRenderers)
                 {
@@ -74,14 +63,18 @@ namespace Hs.Pun
         }
 
         /// <summary>
-        /// プレーヤーの生成位置となるオブジェクトを円状に作成
+        /// ローカルプレイヤーの生成位置調整
         /// </summary>
-        private void GeneratePlayerPositionList()
+        private void SetLocalPlayerPosition()
         {
+            //＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            // プレーヤーの生成位置となるオブジェクトを円状に作成
+            //＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            
             //部屋の上限分の座標リストを作成
             for (var i = 0; i < ConstantData.PlayerUpperLimit; i++)
             {
-                _playerSetPositionObjectList.Add(new GameObject());
+                _playerSetPositionObjectList.Add(new GameObject($"PlayerPos{i}"));
             }
 
             //オブジェクト間の角度差
@@ -100,6 +93,11 @@ namespace Hs.Pun
                 //中央を向かせる
                 _playerSetPositionObjectList[i].transform.LookAt(Vector3.zero);
             }
+            
+            //CameraRigの座標、回転座標を調整
+            var cameraRigTransform = GameObject.FindGameObjectWithTag("Player").transform;
+            var targetTransform = _playerSetPositionObjectList[PhotonNetwork.LocalPlayer.GetPlayerNum()].transform;
+            PlayerPositionUtility.CopyTargetTransform(cameraRigTransform, targetTransform);
         }
 
         /// <summary>
@@ -132,13 +130,6 @@ namespace Hs.Pun
                     PhotonNetwork.LocalPlayer.UpdatePlayerNum(playerAssignNum);
 
                     Debug.Log("自プレーヤーの値:" + PhotonNetwork.LocalPlayer.GetPlayerNum());
-                    
-                    //座標、回転座標をカスタムプロパティに保存
-                    _localPlayerTransform = _playerSetPositionObjectList[playerSetableCountList[0]].transform;
-                    PlayerPositionUtility.CopyTargetTransform(ref _cameraRig, _localPlayerTransform);
-                    PhotonNetwork.LocalPlayer.UpdatePlayerInitPosition(_cameraRig.transform.position);
-                    PhotonNetwork.LocalPlayer.UpdatePlayerInitRotation(_cameraRig.transform.rotation);
-
                     return;
                 }
 
@@ -158,12 +149,6 @@ namespace Hs.Pun
                 //ローカルのプレイヤーのカスタムプロパティを設定
                 //空いている場所のうち、一番若い数字の箇所を利用
                 PhotonNetwork.LocalPlayer.UpdatePlayerNum(playerSetableCountList[0]);
-                
-                //座標、回転座標をカスタムプロパティに保存
-                _localPlayerTransform = _playerSetPositionObjectList[playerSetableCountList[0]].transform;
-                PlayerPositionUtility.CopyTargetTransform(ref _cameraRig, _localPlayerTransform);
-                PhotonNetwork.LocalPlayer.UpdatePlayerInitPosition(_cameraRig.transform.position);
-                PhotonNetwork.LocalPlayer.UpdatePlayerInitRotation(_cameraRig.transform.rotation);
             }
         }
     }

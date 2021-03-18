@@ -293,8 +293,8 @@ namespace Hs.Pun
             if (stream.IsWriting)
             {
                 //頭
-                stream.SendNext(_headVisual.transform.localPosition);
-                stream.SendNext(_headVisual.transform.localRotation);
+                stream.SendNext(_headVisual.transform.position);
+                stream.SendNext(_headVisual.transform.rotation);
                 
                 //左手
                 stream.SendNext(_leftHandVisual.transform.localPosition);
@@ -319,8 +319,8 @@ namespace Hs.Pun
             else
             {
                 //頭
-                _headVisual.transform.localPosition = (Vector3) stream.ReceiveNext();
-                _headVisual.transform.localRotation = (Quaternion) stream.ReceiveNext();
+                _headVisual.transform.position = (Vector3) stream.ReceiveNext();
+                _headVisual.transform.rotation = (Quaternion) stream.ReceiveNext();
                 
                 //左手
                 _leftHandVisual.transform.localPosition = (Vector3) stream.ReceiveNext();
